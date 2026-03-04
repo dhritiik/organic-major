@@ -7,44 +7,63 @@ const prefixes = ['Meth', 'Eth', 'Prop', 'But', 'Pent', 'Hex', 'Hept', 'Oct', 'N
 const sub = (n) => n.toString().replace(/\d/g, d => '₀₁₂₃₄₅₆₇₈₉'[d]);
 
 // -----------------------------------------------------------------------------
-// Layout Constants
+// Layout Constants – wider spacing for readability
 // -----------------------------------------------------------------------------
-const GRID_X = 280;
-const GRID_Y = 220;
+const GRID_X = 360;
+const GRID_Y = 300;
 const START_Y = 0; // Top offset
 
-// Column Assignments
+// Column Assignments – spread out to avoid overlaps
 const COLS = {
-    AROMATIC: -5,
-    NITRILE: -4,
-    AMIDE: -3,
-    AMINE: -2,
-    HALO: -1,
+    AROMATIC: -6,
+    NITRILE: -5,
+    AMIDE: -4,
+    AMINE: -3,
+    HALO: -1.5,
     BACKBONE: 0,
-    ALKANE: 1,
-    ALKENE: 2,
-    ALKYNE: 3,
-    ALCOHOL: 4,
-    ETHER: 4.8, // Offset
-    ALDEHYDE: 6,
-    KETONE: 7,
-    ACID: 8,
-    ESTER: 9
+    ALKANE: 1.5,
+    ALKENE: 3,
+    ALKYNE: 4.5,
+    ALCOHOL: 6,
+    ETHER: 7.5,
+    ALDEHYDE: 9,
+    KETONE: 10.5,
+    ACID: 12,
+    ESTER: 13.5
+};
+
+// Series colour map used by MoleculeNode
+const SERIES_COLORS = {
+    'Alkane':          { bg: '#1e3a5f', border: '#3b82f6' },
+    'Alkene':          { bg: '#1a3d2e', border: '#22c55e' },
+    'Alkyne':          { bg: '#3b1f4b', border: '#a855f7' },
+    'Alcohol':         { bg: '#4a1d1d', border: '#ef4444' },
+    'Aldehyde':        { bg: '#4a3010', border: '#f59e0b' },
+    'Ketone':          { bg: '#4a3e10', border: '#eab308' },
+    'Carboxylic Acid': { bg: '#5c1a1a', border: '#ef4444' },
+    'Ester':           { bg: '#4a1040', border: '#ec4899' },
+    'Ether':           { bg: '#2d2040', border: '#8b5cf6' },
+    'Amine':           { bg: '#102040', border: '#3b82f6' },
+    'Amide':           { bg: '#1a2840', border: '#6366f1' },
+    'Nitrile':         { bg: '#102030', border: '#06b6d4' },
+    'Haloalkane':      { bg: '#103020', border: '#10b981' },
+    'Aromatic':        { bg: '#302020', border: '#f97316' },
+    'Carbon Skeleton': { bg: 'transparent', border: '#555' },
 };
 
 // -----------------------------------------------------------------------------
 // 1. Element Generator
 // -----------------------------------------------------------------------------
 const generateElements = () => {
-    // Elements float at the top
-    const y = -600;
+    // Elements float at the very top, spread horizontally
+    const y = -800;
     return [
-        { id: 'element-C', type: 'molecule', position: { x: 0, y: y }, data: { isElement: true, label: 'Carbon', formula: 'C', description: 'The backbone of life.', details: { atomicNumber: 6, mass: '12.011' } }, style: { backgroundColor: '#333', color: '#fff', width: 60, height: 60, borderRadius: '50%' } },
-        { id: 'element-H', type: 'molecule', position: { x: -200, y: y }, data: { isElement: true, label: 'Hydrogen', formula: 'H', description: 'The fuel of the universe.', details: { atomicNumber: 1, mass: '1.008' } }, style: { backgroundColor: '#fff', color: '#000', width: 50, height: 50, borderRadius: '50%' } },
-        { id: 'element-O', type: 'molecule', position: { x: 200, y: y }, data: { isElement: true, label: 'Oxygen', formula: 'O', description: 'The breath of life.', details: { atomicNumber: 8, mass: '15.999' } }, style: { backgroundColor: '#f44336', color: '#fff', width: 55, height: 55, borderRadius: '50%' } },
-        { id: 'element-N', type: 'molecule', position: { x: 400, y: y }, data: { isElement: true, label: 'Nitrogen', formula: 'N', description: 'Essential for proteins.', details: { atomicNumber: 7, mass: '14.007' } }, style: { backgroundColor: '#2196f3', color: '#fff', width: 55, height: 55, borderRadius: '50%' } },
-        { id: 'element-Cl', type: 'molecule', position: { x: -400, y: -200 }, data: { isElement: true, label: 'Chlorine', formula: 'Cl', description: 'Halogen gas.', details: { atomicNumber: 17, mass: '35.45' } }, style: { backgroundColor: '#4caf50', color: '#fff', width: 55, height: 55, borderRadius: '50%' } },
-        { id: 'element-Br', type: 'molecule', position: { x: -600, y: -200 }, data: { isElement: true, label: 'Bromine', formula: 'Br', description: 'Liquid halogen.', details: { atomicNumber: 35, mass: '79.90' } }, style: { backgroundColor: '#8d2d2d', color: '#fff', width: 55, height: 55, borderRadius: '50%' } },
+        { id: 'element-C', type: 'molecule', position: { x: 0, y: y }, data: { isElement: true, label: 'Carbon', formula: 'C', description: 'The backbone of organic chemistry – all organic compounds contain carbon.', details: { atomicNumber: 6, mass: '12.011', electronegativity: '2.55', valence: 4 } }, style: { backgroundColor: '#333', color: '#fff', width: 60, height: 60, borderRadius: '50%' } },
+        { id: 'element-H', type: 'molecule', position: { x: -300, y: y }, data: { isElement: true, label: 'Hydrogen', formula: 'H', description: 'Most abundant element in the universe. Forms covalent bonds with C.', details: { atomicNumber: 1, mass: '1.008', electronegativity: '2.20', valence: 1 } }, style: { backgroundColor: '#fff', color: '#000', width: 50, height: 50, borderRadius: '50%' } },
+        { id: 'element-O', type: 'molecule', position: { x: 300, y: y }, data: { isElement: true, label: 'Oxygen', formula: 'O', description: 'Found in alcohols, aldehydes, ketones, acids, esters, and ethers.', details: { atomicNumber: 8, mass: '15.999', electronegativity: '3.44', valence: 2 } }, style: { backgroundColor: '#f44336', color: '#fff', width: 55, height: 55, borderRadius: '50%' } },
+        { id: 'element-N', type: 'molecule', position: { x: 600, y: y }, data: { isElement: true, label: 'Nitrogen', formula: 'N', description: 'Found in amines, amides, nitriles, and amino acids.', details: { atomicNumber: 7, mass: '14.007', electronegativity: '3.04', valence: 3 } }, style: { backgroundColor: '#2196f3', color: '#fff', width: 55, height: 55, borderRadius: '50%' } },
+        { id: 'element-Cl', type: 'molecule', position: { x: -600, y: y + 200 }, data: { isElement: true, label: 'Chlorine', formula: 'Cl', description: 'Halogen. Forms haloalkanes via free-radical substitution or nucleophilic substitution.', details: { atomicNumber: 17, mass: '35.45', electronegativity: '3.16', valence: 1 } }, style: { backgroundColor: '#4caf50', color: '#fff', width: 55, height: 55, borderRadius: '50%' } },
+        { id: 'element-Br', type: 'molecule', position: { x: -900, y: y + 200 }, data: { isElement: true, label: 'Bromine', formula: 'Br', description: 'Liquid halogen. Used in electrophilic addition to alkenes.', details: { atomicNumber: 35, mass: '79.90', electronegativity: '2.96', valence: 1 } }, style: { backgroundColor: '#8d2d2d', color: '#fff', width: 55, height: 55, borderRadius: '50%' } },
     ];
 };
 
@@ -56,15 +75,15 @@ const generateBackbones = (n) => Array.from({ length: n }, (_, i) => {
     return {
         id: id('backbone', c),
         type: 'molecule',
-        position: { x: COLS.BACKBONE * GRID_X, y: c * GRID_Y + START_Y }, // Spaced out vertically
+        position: { x: COLS.BACKBONE * GRID_X, y: c * GRID_Y + START_Y },
         data: {
             label: `${prefixes[i]}-`,
             formula: `C${sub(c)}`,
-            description: `${c} Carbon Atom(s) Backbone.`,
-            details: { series: 'Carbon Skeleton', count: c }
+            description: `${c} Carbon backbone – the skeleton for all ${prefixes[i]}– derivatives.`,
+            details: { series: 'Carbon Skeleton', carbonCount: c }
         },
         style: {
-            backgroundColor: 'transport',
+            backgroundColor: 'transparent',
             borderColor: '#555',
             borderStyle: 'dashed',
             color: '#aaa',
@@ -83,24 +102,29 @@ const generateBackbones = (n) => Array.from({ length: n }, (_, i) => {
 // Hydrocarbons
 const generateAlkanes = (n) => Array.from({ length: n }, (_, i) => {
     const c = i + 1;
-    // Alkanes are the primary derivative, placed close to backbone
     return {
         id: id('alkane', c), type: 'molecule', position: { x: COLS.ALKANE * GRID_X, y: c * GRID_Y + START_Y },
-        data: { label: prefixes[i] + 'ane', formula: `C${sub(c)}H${sub(2 * c + 2)}`, description: 'Saturated hydrocarbon.', details: { series: 'Alkane', hybridization: 'sp³' } }
+        data: {
+            label: prefixes[i] + 'ane', formula: `C${sub(c)}H${sub(2 * c + 2)}`,
+            description: `Saturated hydrocarbon with ${c} carbon(s). Only single bonds (σ bonds).`,
+            details: { series: 'Alkane', hybridization: 'sp³', bondAngle: '109.5°', general: `CₙH₂ₙ₊₂` },
+            mechanismIds: ['free-radical-substitution', 'free-radical-bromination'],
+            seriesColor: SERIES_COLORS['Alkane'],
+        }
     };
 });
 
 const generateAlkenes = (n) => Array.from({ length: n - 1 }, (_, i) => {
     const c = i + 2;
-    const isEthene = c === 2;
     return {
         id: id('alkene', c), type: 'molecule', position: { x: COLS.ALKENE * GRID_X, y: c * GRID_Y + START_Y },
         data: {
             label: prefixes[i + 1] + 'ene',
             formula: `C${sub(c)}H${sub(2 * c)}`,
-            description: 'Unsaturated with double bond.',
-            details: { series: 'Alkene', hybridization: 'sp²' },
-            mechanismId: isEthene ? 'hydrohalogenation-ethene-bromoethane' : undefined
+            description: `Unsaturated hydrocarbon with one C=C double bond and ${c} carbons.`,
+            details: { series: 'Alkene', hybridization: 'sp²', bondAngle: '120°', general: 'CₙH₂ₙ' },
+            mechanismIds: c === 2 ? ['hydrohalogenation-ethene-bromoethane', 'hydrogenation-ethene', 'hydration-ethene'] : ['hydrohalogenation-propene', 'hydrogenation-propene', 'hydration-propene'],
+            seriesColor: SERIES_COLORS['Alkene'],
         }
     };
 });
@@ -109,7 +133,13 @@ const generateAlkynes = (n) => Array.from({ length: n - 1 }, (_, i) => {
     const c = i + 2;
     return {
         id: id('alkyne', c), type: 'molecule', position: { x: COLS.ALKYNE * GRID_X, y: c * GRID_Y + START_Y },
-        data: { label: prefixes[i + 1] + 'yne', formula: `C${sub(c)}H${sub(2 * c - 2)}`, description: 'Unsaturated with triple bond.', details: { series: 'Alkyne', hybridization: 'sp' } }
+        data: {
+            label: prefixes[i + 1] + 'yne', formula: `C${sub(c)}H${sub(2 * c - 2)}`,
+            description: `Unsaturated hydrocarbon with one C≡C triple bond and ${c} carbons.`,
+            details: { series: 'Alkyne', hybridization: 'sp', bondAngle: '180°', general: 'CₙH₂ₙ₋₂' },
+            mechanismIds: c === 2 ? ['hydrogenation-alkyne-alkene'] : ['hydrogenation-propyne'],
+            seriesColor: SERIES_COLORS['Alkyne'],
+        }
     };
 });
 
@@ -117,13 +147,14 @@ const generateAlkynes = (n) => Array.from({ length: n - 1 }, (_, i) => {
 const generateAromatics = () => {
     const baseX = COLS.AROMATIC * GRID_X;
     const baseY = 3 * GRID_Y; // Start around C3 level
+    const color = SERIES_COLORS['Aromatic'];
     return [
-        { id: 'aromatic-benzene', type: 'molecule', position: { x: baseX, y: baseY }, data: { label: 'Benzene', formula: 'C₆H₆', description: 'Aromatic ring system.', details: { series: 'Aromatic' } } },
-        { id: 'aromatic-toluene', type: 'molecule', position: { x: baseX, y: baseY + GRID_Y }, data: { label: 'Toluene', formula: 'C₇H₈', description: 'Methylbenzene.', details: { series: 'Aromatic' } } },
-        { id: 'aromatic-phenol', type: 'molecule', position: { x: baseX - 150, y: baseY + GRID_Y }, data: { label: 'Phenol', formula: 'C₆H₅OH', description: 'Hydroxybenzene.', details: { series: 'Aromatic', functionalGroup: '-OH' } } },
-        { id: 'aromatic-aniline', type: 'molecule', position: { x: baseX + 150, y: baseY + GRID_Y }, data: { label: 'Aniline', formula: 'C₆H₅NH₂', description: 'Aminobenzene.', details: { series: 'Aromatic', functionalGroup: '-NH₂' } } },
-        { id: 'aromatic-benzoic', type: 'molecule', position: { x: baseX, y: baseY + 2 * GRID_Y }, data: { label: 'Benzoic Acid', formula: 'C₆H₅COOH', description: 'Carboxybenzene.', details: { series: 'Aromatic', functionalGroup: '-COOH' } } },
-        { id: 'aromatic-nitro', type: 'molecule', position: { x: baseX + 150, y: baseY }, data: { label: 'Nitrobenzene', formula: 'C₆H₅NO₂', description: 'Precursor to aniline.', details: { series: 'Aromatic', functionalGroup: '-NO₂' } } },
+        { id: 'aromatic-benzene', type: 'molecule', position: { x: baseX, y: baseY }, data: { label: 'Benzene', formula: 'C₆H₆', description: 'Parent aromatic ring – delocalised π-electrons above and below the ring. Extremely stable.', details: { series: 'Aromatic', hybridization: 'sp²', bondAngle: '120°' }, mechanismIds: ['nitration-benzene', 'friedel-crafts-alkylation'], seriesColor: color } },
+        { id: 'aromatic-toluene', type: 'molecule', position: { x: baseX, y: baseY + GRID_Y }, data: { label: 'Toluene', formula: 'C₇H₈', description: 'Methylbenzene – activating methyl group makes the ring more reactive than benzene.', details: { series: 'Aromatic', altName: 'Methylbenzene' }, mechanismIds: ['oxidation-toluene-benzoic', 'friedel-crafts-alkylation'], seriesColor: color } },
+        { id: 'aromatic-phenol', type: 'molecule', position: { x: baseX - 200, y: baseY + GRID_Y }, data: { label: 'Phenol', formula: 'C₆H₅OH', description: 'Hydroxybenzene – weakly acidic. –OH activates ring towards electrophilic substitution.', details: { series: 'Aromatic', functionalGroup: '-OH', pH: 'Weakly acidic' }, mechanismIds: ['dow-process-phenol'], seriesColor: color } },
+        { id: 'aromatic-aniline', type: 'molecule', position: { x: baseX + 200, y: baseY + GRID_Y + 100 }, data: { label: 'Aniline', formula: 'C₆H₅NH₂', description: 'Aminobenzene – weak base. Produced by reduction of nitrobenzene (Sn/HCl).', details: { series: 'Aromatic', functionalGroup: '-NH₂' }, mechanismIds: ['reduction-nitrobenzene-aniline'], seriesColor: color } },
+        { id: 'aromatic-benzoic', type: 'molecule', position: { x: baseX, y: baseY + 2 * GRID_Y }, data: { label: 'Benzoic Acid', formula: 'C₆H₅COOH', description: 'Carboxybenzene – produced by vigorous oxidation of toluene side chain.', details: { series: 'Aromatic', functionalGroup: '-COOH' }, mechanismIds: ['oxidation-toluene-benzoic'], seriesColor: color } },
+        { id: 'aromatic-nitro', type: 'molecule', position: { x: baseX + 200, y: baseY }, data: { label: 'Nitrobenzene', formula: 'C₆H₅NO₂', description: 'Nitrated benzene – pale yellow oily liquid. Reduced to aniline.', details: { series: 'Aromatic', functionalGroup: '-NO₂' }, mechanismIds: ['reduction-nitrobenzene-aniline', 'nitration-benzene'], seriesColor: color } },
     ];
 };
 
@@ -132,7 +163,14 @@ const generateAlcohols = (n) => Array.from({ length: n }, (_, i) => {
     const c = i + 1;
     return {
         id: id('alcohol', c), type: 'molecule', position: { x: COLS.ALCOHOL * GRID_X, y: c * GRID_Y + START_Y },
-        data: { label: prefixes[i] + 'anol', formula: `C${sub(c)}H${sub(2 * c + 1)}OH`, description: 'Primary alcohol.', details: { series: 'Alcohol', functionalGroup: '-OH' } }
+        data: {
+            label: prefixes[i] + 'anol',
+            formula: `C${sub(c)}H${sub(2 * c + 1)}OH`,
+            description: c <= 2 ? 'Primary alcohol with –OH on terminal carbon.' : (c === 3 ? 'Can be primary or secondary alcohol.' : 'Primary alcohol.'),
+            details: { series: 'Alcohol', functionalGroup: '-OH', general: 'CₙH₂ₙ₊₁OH' },
+            mechanismIds: c <= 2 ? ['oxidation-alcohol-aldehyde', 'dehydration-alcohol-alkene', 'dehydration-alcohol-ether'] : ['oxidation-propanol-propanal', 'oxidation-alcohol-ketone', 'dehydration-propanol-propene', 'dehydration-alcohol-ether'],
+            seriesColor: SERIES_COLORS['Alcohol'],
+        }
     };
 });
 
@@ -140,7 +178,13 @@ const generateAldehydes = (n) => Array.from({ length: n }, (_, i) => {
     const c = i + 1;
     return {
         id: id('aldehyde', c), type: 'molecule', position: { x: COLS.ALDEHYDE * GRID_X, y: c * GRID_Y + START_Y },
-        data: { label: prefixes[i] + 'anal', formula: `C${sub(c)}H${sub(2 * c)}O`, description: 'Terminal carbonyl.', details: { series: 'Aldehyde', functionalGroup: '-CHO' } }
+        data: {
+            label: prefixes[i] + 'anal', formula: `C${sub(c)}H${sub(2 * c)}O`,
+            description: 'Terminal carbonyl (C=O) group at the end of the carbon chain.',
+            details: { series: 'Aldehyde', functionalGroup: '-CHO', test: 'Tollens / Fehlings' },
+            mechanismIds: c <= 2 ? ['oxidation-aldehyde-acid'] : ['oxidation-propanal-propanoic'],
+            seriesColor: SERIES_COLORS['Aldehyde'],
+        }
     };
 });
 
@@ -148,7 +192,13 @@ const generateKetones = (n) => Array.from({ length: n - 2 }, (_, i) => {
     const c = i + 3; // Starts at Propanone (C3)
     return {
         id: id('ketone', c), type: 'molecule', position: { x: COLS.KETONE * GRID_X, y: c * GRID_Y + START_Y },
-        data: { label: prefixes[i + 2] + 'anone', formula: `C${sub(c)}H${sub(2 * c)}O`, description: 'Internal carbonyl.', details: { series: 'Ketone', functionalGroup: 'C=O' } }
+        data: {
+            label: prefixes[i + 2] + 'anone', formula: `C${sub(c)}H${sub(2 * c)}O`,
+            description: 'Internal carbonyl (C=O) group within the carbon chain. Cannot be further oxidised easily.',
+            details: { series: 'Ketone', functionalGroup: 'C=O', test: 'Does NOT reduce Tollens' },
+            mechanismIds: ['oxidation-alcohol-ketone'],
+            seriesColor: SERIES_COLORS['Ketone'],
+        }
     };
 });
 
@@ -156,26 +206,42 @@ const generateAcids = (n) => Array.from({ length: n }, (_, i) => {
     const c = i + 1;
     return {
         id: id('acid', c), type: 'molecule', position: { x: COLS.ACID * GRID_X, y: c * GRID_Y + START_Y },
-        data: { label: prefixes[i] + 'anoic Acid', formula: `C${sub(c - 1)}H${sub(2 * c - 1)}COOH`, description: 'Carboxylic acid.', details: { series: 'Carboxylic Acid', functionalGroup: '-COOH' } },
-        style: { borderColor: '#ef4444' } // Red border for acids
+        data: {
+            label: prefixes[i] + 'anoic Acid', formula: `C${sub(c - 1)}H${sub(2 * c - 1)}COOH`,
+            description: 'Carboxylic acid – contains –COOH. Weak acid. Reacts with bases, alcohols, amines.',
+            details: { series: 'Carboxylic Acid', functionalGroup: '-COOH', pH: 'Acidic (weak)' },
+            mechanismIds: ['esterification', 'esterification-ethanoic', 'amidation'],
+            seriesColor: SERIES_COLORS['Carboxylic Acid'],
+        },
     };
 });
 
 const generateEsters = (n) => Array.from({ length: n - 1 }, (_, i) => {
-    // Starts at C2 (Methyl Methanoate)
     const c = i + 2;
     return {
         id: id('ester', c), type: 'molecule', position: { x: COLS.ESTER * GRID_X, y: c * GRID_Y + START_Y },
-        data: { label: 'Methyl ' + prefixes[i + 1] + 'anoate', formula: `C${sub(c)}H${sub(2 * c)}O₂`, description: 'Sweet smelling ester.', details: { series: 'Ester', functionalGroup: '-COO-' } },
-        style: { borderColor: '#ec4899' } // Pink for esters
+        data: {
+            label: 'Methyl ' + prefixes[i + 1] + 'anoate', formula: `C${sub(c)}H${sub(2 * c)}O₂`,
+            description: 'Ester – fruity-smelling compound formed from acid + alcohol. Used in perfumes & flavourings.',
+            details: { series: 'Ester', functionalGroup: '-COO-', formation: 'Esterification' },
+            mechanismIds: ['esterification', 'esterification-ethanoic'],
+            seriesColor: SERIES_COLORS['Ester'],
+        },
     };
 });
 
 const generateEthers = (n) => Array.from({ length: n - 1 }, (_, i) => {
     const c = i + 2;
     return {
-        id: id('ether', c), type: 'molecule', position: { x: COLS.ETHER * GRID_X, y: c * GRID_Y + START_Y + (GRID_Y / 2) }, // Offset between rows
-        data: { label: 'Methoxy' + prefixes[i] + 'ane', formula: `C${sub(c)}H${sub(2 * c + 2)}O`, description: 'Ethers are inert.', details: { series: 'Ether', functionalGroup: '-O-' } }
+        id: id('ether', c), type: 'molecule', position: { x: COLS.ETHER * GRID_X, y: c * GRID_Y + START_Y },
+        data: {
+            label: c === 4 ? 'Ethoxyethane' : ('Methoxy' + prefixes[i] + 'ane'),
+            formula: `C${sub(c)}H${sub(2 * c + 2)}O`,
+            description: 'Ethers – relatively unreactive. Formed by intermolecular dehydration of alcohols.',
+            details: { series: 'Ether', functionalGroup: '-O-', formation: 'Dehydration (140°C)' },
+            mechanismIds: ['dehydration-alcohol-ether'],
+            seriesColor: SERIES_COLORS['Ether'],
+        }
     };
 });
 
@@ -184,8 +250,13 @@ const generateAmines = (n) => Array.from({ length: n }, (_, i) => {
     const c = i + 1;
     return {
         id: id('amine', c), type: 'molecule', position: { x: COLS.AMINE * GRID_X, y: c * GRID_Y + START_Y },
-        data: { label: prefixes[i] + 'anamine', formula: `C${sub(c)}H${sub(2 * c + 1)}NH₂`, description: 'Primary amine.', details: { series: 'Amine', functionalGroup: '-NH₂' } },
-        style: { borderColor: '#3b82f6' } // Blue for bases
+        data: {
+            label: prefixes[i] + 'anamine', formula: `C${sub(c)}H${sub(2 * c + 1)}NH₂`,
+            description: 'Primary amine – acts as a base (lone pair on N). Formed from haloalkanes via ammonolysis.',
+            details: { series: 'Amine', functionalGroup: '-NH₂', pH: 'Basic (weak)' },
+            mechanismIds: ['ammonolysis', 'nitrile-reduction'],
+            seriesColor: SERIES_COLORS['Amine'],
+        },
     };
 });
 
@@ -193,16 +264,27 @@ const generateAmides = (n) => Array.from({ length: n }, (_, i) => {
     const c = i + 1;
     return {
         id: id('amide', c), type: 'molecule', position: { x: COLS.AMIDE * GRID_X, y: c * GRID_Y + START_Y },
-        data: { label: prefixes[i] + 'anamide', formula: `C${sub(c)}H${sub(2 * c + 1)}NO`, description: 'Acid derivative.', details: { series: 'Amide', functionalGroup: '-CONH₂' } }
+        data: {
+            label: prefixes[i] + 'anamide', formula: `C${sub(c)}H${sub(2 * c + 1)}NO`,
+            description: 'Amide – formed from acid + ammonia/amine. Contains the –CONH₂ group.',
+            details: { series: 'Amide', functionalGroup: '-CONH₂', formation: 'Amidation' },
+            mechanismIds: ['amidation'],
+            seriesColor: SERIES_COLORS['Amide'],
+        }
     };
 });
 
 const generateNitriles = (n) => Array.from({ length: n }, (_, i) => {
     const c = i + 1;
-    // Actually Methanenitrile is HCN. Let's start C2 (Ethanenitrile/Acetonitrile)
     return {
         id: id('nitrile', c), type: 'molecule', position: { x: COLS.NITRILE * GRID_X, y: c * GRID_Y + START_Y },
-        data: { label: prefixes[i] + 'anenitrile', formula: `C${sub(c)}H${sub(2 * c - 1)}N`, description: 'Triple bond N.', details: { series: 'Nitrile', functionalGroup: '-CN' } }
+        data: {
+            label: prefixes[i] + 'anenitrile', formula: `C${sub(c)}H${sub(2 * c - 1)}N`,
+            description: 'Nitrile – contains C≡N triple bond. Can be hydrolysed to carboxylic acid or reduced to amine.',
+            details: { series: 'Nitrile', functionalGroup: '-CN', hybridization: 'sp' },
+            mechanismIds: ['cyanide-substitution', 'nitrile-hydrolysis', 'nitrile-reduction'],
+            seriesColor: SERIES_COLORS['Nitrile'],
+        }
     };
 });
 
@@ -215,7 +297,16 @@ const generateHaloalkanes = (n, halogen) => Array.from({ length: n }, (_, i) => 
     const yOffset = halogen === 'Br' ? 0 : 50;
     return {
         id: id(`halo${halogen.toLowerCase()}`, c), type: 'molecule', position: { x: COLS.HALO * GRID_X + xOffset, y: c * GRID_Y + START_Y + yOffset },
-        data: { label: `${hName}${prefixes[i].toLowerCase()}ane`, formula: `C${sub(c)}H${sub(2 * c + 1)}${halogen}`, description: 'Halogenated.', details: { series: 'Haloalkane', functionalGroup: '-' + halogen } }
+        data: {
+            label: `${hName}${prefixes[i].toLowerCase()}ane`,
+            formula: `C${sub(c)}H${sub(2 * c + 1)}${halogen}`,
+            description: `Haloalkane with –${halogen}. Good leaving group. Undergoes nucleophilic substitution & elimination.`,
+            details: { series: 'Haloalkane', functionalGroup: '-' + halogen, bondPolarity: `C-${halogen} is polar` },
+            mechanismIds: halogen === 'Br'
+                        ? ['nucleophilic-substitution-hydrolysis', 'hydrolysis-bromoethane', 'ammonolysis', 'cyanide-substitution', 'free-radical-bromination']
+                        : ['free-radical-substitution', 'nucleophilic-substitution-hydrolysis'],
+            seriesColor: SERIES_COLORS['Haloalkane'],
+        }
     };
 });
 
@@ -239,66 +330,48 @@ const generateReactions = (nodes) => {
     const edges = [];
     const find = (pid) => nodes.find(n => n.id === pid);
 
+    // Edge style helpers
+    const reactionEdge = (eid, src, tgt, label, reagents, color = '#64748b') => ({
+        id: eid, source: src, target: tgt, label,
+        style: { stroke: color, strokeWidth: 2 },
+        labelStyle: { fill: '#e2e8f0', fontWeight: 600, fontSize: 11 },
+        labelBgStyle: { fill: '#0f172a', fillOpacity: 0.85 },
+        labelBgPadding: [6, 4],
+        data: { reagents },
+        animated: true,
+    });
+
     // --- Backbone Connections (Carbon Skeleton) ---
     nodes.forEach(node => {
+        const parts = node.id.split('-');
+        if (parts.length >= 2) {
+            const c = parseInt(parts[1]);
+            if (!isNaN(c) && !node.data.isElement && !node.id.startsWith('backbone') && !node.id.startsWith('aromatic')) {
+                const backboneId = id('backbone', c);
+                if (find(backboneId)) {
+                    edges.push({
+                        id: `struct-${node.id}`,
+                        source: backboneId,
+                        target: node.id,
+                        label: '',
+                        style: { stroke: '#334155', strokeWidth: 1, strokeDasharray: '4,4', opacity: 0.15 },
+                        animated: false
+                    });
+                }
+            }
+        }
+
         if (node.id.startsWith('backbone')) {
-            const cStr = node.id.split('-')[1];
-            const c = parseInt(cStr);
+            const c = parseInt(node.id.split('-')[1]);
             edges.push({
                 id: `c-backbone-${c}`,
                 source: 'element-C',
                 target: node.id,
-                label: `${c}x`,
-                style: { stroke: '#555', strokeWidth: 1, strokeDasharray: '5,5' },
+                label: `${c}×C`,
+                style: { stroke: '#555', strokeWidth: 1.5, strokeDasharray: '5,5' },
                 animated: false
             });
-
-            // Connect Backbone to Alkane
-            const alkane = id('alkane', c);
-            if (find(alkane)) {
-                edges.push({
-                    id: `backbone-alkane-${c}`,
-                    source: node.id,
-                    target: alkane,
-                    type: 'straight',
-                    style: { stroke: '#fff', strokeWidth: 2, opacity: 0.3 }
-                });
-            }
         }
-    });
-
-    // --- Elemental Composition Edges ---
-    const parseFormula = (formula) => {
-        if (!formula) return {};
-        const normal = formula.replace(/[₀₁₂₃₄₅₆₇₈₉]/g, d => '0123456789'['₀₁₂₃₄₅₆₇₈₉'.indexOf(d)]);
-        const counts = {};
-        let match;
-        const regex = /([A-Z][a-z]?)([\d]*)/g;
-        while ((match = regex.exec(normal)) !== null) {
-            const element = match[1];
-            const count = match[2] ? parseInt(match[2]) : 1;
-            counts[element] = (counts[element] || 0) + count;
-        }
-        return counts;
-    };
-
-    nodes.forEach(node => {
-        if (node.data.isElement || node.id.startsWith('backbone')) return;
-        const counts = parseFormula(node.data.formula);
-        Object.entries(counts).forEach(([element, count]) => {
-            if (element === 'C') return; // Handled by backbone
-            const sourceId = `element-${element}`;
-            if (find(sourceId)) {
-                edges.push({
-                    id: `comp-${element}-${node.id}`,
-                    source: sourceId,
-                    target: node.id,
-                    label: `${count}x`,
-                    style: { stroke: getElementColor(element), strokeWidth: 1, strokeDasharray: '2,4', opacity: 0.15 },
-                    animated: false
-                });
-            }
-        });
     });
 
     // --- Reactions ---
@@ -309,85 +382,122 @@ const generateReactions = (nodes) => {
         const c = parseInt(parts[1]);
         if (isNaN(c)) return;
 
-        // 1. Alkene -> Alkane (Hydrogenation)
+        // 1. Alkene → Alkane (Hydrogenation: H₂/Ni)
         if (type === 'alkene') {
             const target = id('alkane', c);
-            if (find(target)) edges.push({ id: `hyd-${c}`, source: node.id, target, label: 'Hydrogenation', data: { reagents: 'H₂/Ni' } });
+            if (find(target)) edges.push(reactionEdge(`hyd-${c}`, node.id, target, '+ H₂', 'H₂ / Ni, 150°C', '#22c55e'));
         }
 
-        // 2. Alkyne -> Alkene
+        // 2. Alkyne → Alkene (Partial Hydrogenation)
         if (type === 'alkyne') {
             const target = id('alkene', c);
-            if (find(target)) edges.push({ id: `hyd-alkyne-${c}`, source: node.id, target, label: 'Hydrogenation', data: { reagents: 'H₂/Lindlar' } });
+            if (find(target)) edges.push(reactionEdge(`hyd-alkyne-${c}`, node.id, target, '+ H₂', 'H₂ / Lindlar cat.', '#a855f7'));
         }
 
-        // 3. Alkene -> Alcohol
+        // 3. Alkene → Alcohol (Hydration: H₂O/H⁺)
         if (type === 'alkene') {
             const target = id('alcohol', c);
-            if (find(target)) edges.push({ id: `hydration-${c}`, source: node.id, target, label: 'Hydration', data: { reagents: 'H₂O/H⁺' } });
+            if (find(target)) edges.push(reactionEdge(`hydration-${c}`, node.id, target, '+ H₂O', 'Steam / H₃PO₄', '#3b82f6'));
         }
 
-        // 4. Alcohol -> Aldehyde
+        // 4. Alkene → Haloalkane (Electrophilic Addition)
+        if (type === 'alkene') {
+            const tBr = id('halobr', c);
+            if (find(tBr)) edges.push(reactionEdge(`add-br-${c}`, node.id, tBr, '+ HBr', 'HBr(g)', '#8d2d2d'));
+        }
+
+        // 5. Alcohol → Aldehyde (Mild Oxidation)
         if (type === 'alcohol') {
             const target = id('aldehyde', c);
-            if (find(target)) edges.push({ id: `ox-ald-${c}`, source: node.id, target, label: 'Oxidation', data: { reagents: 'PCC' } });
+            if (find(target)) edges.push(reactionEdge(`ox-ald-${c}`, node.id, target, 'Oxidation', 'K₂Cr₂O₇ / H⁺ (distil)', '#f59e0b'));
         }
 
-        // 5. Alcohol -> Ketone
+        // 6. Alcohol → Ketone  (for c>=3)
         if (type === 'alcohol' && c >= 3) {
             const target = id('ketone', c);
-            if (find(target)) edges.push({ id: `ox-ket-${c}`, source: node.id, target, label: 'Oxidation', data: { reagents: 'K₂Cr₂O₇' } });
+            if (find(target)) edges.push(reactionEdge(`ox-ket-${c}`, node.id, target, 'Oxidation', 'K₂Cr₂O₇ / H⁺ (reflux)', '#eab308'));
         }
 
-        // 6. Aldehyde -> Acid
+        // 7. Alcohol → Alkene (Dehydration at 170°C)
+        if (type === 'alcohol' && c >= 2) {
+            const target = id('alkene', c);
+            if (find(target)) edges.push(reactionEdge(`dehy-e-${c}`, node.id, target, 'Dehydration', 'H₂SO₄, 170°C', '#f97316'));
+        }
+
+        // 8. Alcohol → Ether (Dehydration at 140°C)
+        if (type === 'alcohol' && c >= 1) {
+            const target = id('ether', c * 2);
+            if (find(target)) edges.push(reactionEdge(`ether-${c}`, node.id, target, 'Dehydration', 'H₂SO₄, 140°C', '#8b5cf6'));
+        }
+
+        // 9. Aldehyde → Acid (Full Oxidation)
         if (type === 'aldehyde') {
             const target = id('acid', c);
-            if (find(target)) edges.push({ id: `ox-acid-${c}`, source: node.id, target, label: 'Oxidation', data: { reagents: 'KMnO₄' } });
+            if (find(target)) edges.push(reactionEdge(`ox-acid-${c}`, node.id, target, 'Oxidation', 'KMnO₄ / K₂Cr₂O₇', '#ef4444'));
         }
 
-        // 7. Acid -> Ester
+        // 10. Acid → Ester (Esterification)
         if (type === 'acid') {
             const target = id('ester', c + 1);
-            if (find(target)) edges.push({ id: `ester-${c}`, source: node.id, target, label: 'Esterification', data: { reagents: 'CH₃OH/H⁺' } });
+            if (find(target)) edges.push(reactionEdge(`ester-${c}`, node.id, target, 'Esterification', '+ CH₃OH / H₂SO₄', '#ec4899'));
         }
 
-        // 8. Acid -> Amide
+        // 11. Acid → Amide (Amidation)
         if (type === 'acid') {
             const target = id('amide', c);
-            if (find(target)) edges.push({ id: `amide-${c}`, source: node.id, target, label: 'Amidation', data: { reagents: 'NH₃, Heat' } });
+            if (find(target)) edges.push(reactionEdge(`amide-${c}`, node.id, target, 'Amidation', '+ NH₃, heat', '#6366f1'));
         }
 
-        // 9. Haloalkane -> Amine
+        // 12. Haloalkane (Br) → Amine (Ammonolysis)
         if (type === 'halobr') {
             const target = id('amine', c);
-            if (find(target)) edges.push({ id: `amm-${c}`, source: node.id, target, label: 'Ammonolysis', data: { reagents: 'NH₃ (exc)' } });
+            if (find(target)) edges.push(reactionEdge(`amm-${c}`, node.id, target, 'Ammonolysis', 'excess NH₃', '#3b82f6'));
         }
 
-        // 10. Alkane -> Haloalkane
+        // 13. Haloalkane (Br) → Alcohol (Nucleophilic substitution / Hydrolysis)
+        if (type === 'halobr') {
+            const target = id('alcohol', c);
+            if (find(target)) edges.push(reactionEdge(`hydrol-${c}`, node.id, target, 'Hydrolysis', 'NaOH(aq), reflux', '#ef4444'));
+        }
+
+        // 14. Haloalkane (Br) → Nitrile (Cyanide substitution)
+        if (type === 'halobr') {
+            const target = id('nitrile', c);
+            if (find(target)) edges.push(reactionEdge(`cn-${c}`, node.id, target, '+ KCN', 'KCN, ethanol, reflux', '#06b6d4'));
+        }
+
+        // 15. Alkane → Haloalkane (Free-radical Substitution)
         if (type === 'alkane') {
             const tBr = id('halobr', c);
             const tCl = id('halocl', c);
-            if (find(tBr)) edges.push({ id: `sub-br-${c}`, source: node.id, target: tBr, label: 'Substitution', style: { strokeDasharray: '5,5' }, data: { reagents: 'Br₂/UV' } });
-            if (find(tCl)) edges.push({ id: `sub-cl-${c}`, source: node.id, target: tCl, label: 'Substitution', style: { strokeDasharray: '5,5' }, data: { reagents: 'Cl₂/UV' } });
+            if (find(tBr)) edges.push(reactionEdge(`sub-br-${c}`, node.id, tBr, '+ Br₂', 'Br₂ / UV light', '#8d2d2d'));
+            if (find(tCl)) edges.push(reactionEdge(`sub-cl-${c}`, node.id, tCl, '+ Cl₂', 'Cl₂ / UV light', '#4caf50'));
         }
 
-        // 11. Alcohol -> Ether
-        if (type === 'alcohol' && c >= 1) {
-            const target = id('ether', c * 2);
-            if (find(target)) edges.push({ id: `ether-${c}`, source: node.id, target, label: 'Dehydration', data: { reagents: 'H₂SO₄, 140°C' } });
+        // 16. Nitrile → Acid (Hydrolysis)
+        if (type === 'nitrile') {
+            const target = id('acid', c);
+            if (find(target)) edges.push(reactionEdge(`nitrile-acid-${c}`, node.id, target, 'Hydrolysis', 'H₂O / H⁺, reflux', '#ef4444'));
+        }
+
+        // 17. Nitrile → Amine (Reduction)
+        if (type === 'nitrile') {
+            const target = id('amine', c);
+            if (find(target)) edges.push(reactionEdge(`nitrile-amine-${c}`, node.id, target, 'Reduction', 'LiAlH₄ / H₂', '#3b82f6'));
         }
     });
 
     // --- Aromatic Connections ---
     if (find('aromatic-benzene') && find('aromatic-nitro'))
-        edges.push({ id: 'nitration', source: 'aromatic-benzene', target: 'aromatic-nitro', label: 'Nitration', data: { reagents: 'HNO₃/H₂SO₄' } });
+        edges.push(reactionEdge('nitration', 'aromatic-benzene', 'aromatic-nitro', 'Nitration', 'HNO₃ / H₂SO₄, 50°C', '#f97316'));
     if (find('aromatic-nitro') && find('aromatic-aniline'))
-        edges.push({ id: 'reduction-nitro', source: 'aromatic-nitro', target: 'aromatic-aniline', label: 'Reduction', data: { reagents: 'Sn/HCl' } });
+        edges.push(reactionEdge('reduction-nitro', 'aromatic-nitro', 'aromatic-aniline', 'Reduction', 'Sn / conc. HCl', '#3b82f6'));
     if (find('aromatic-benzene') && find('aromatic-toluene'))
-        edges.push({ id: 'alkylation', source: 'aromatic-benzene', target: 'aromatic-toluene', label: 'Alkylation', data: { reagents: 'CH₃Cl/AlCl₃' } });
+        edges.push(reactionEdge('alkylation', 'aromatic-benzene', 'aromatic-toluene', 'Friedel-Crafts', 'CH₃Cl / AlCl₃', '#f59e0b'));
     if (find('aromatic-toluene') && find('aromatic-benzoic'))
-        edges.push({ id: 'ox-sidechain', source: 'aromatic-toluene', target: 'aromatic-benzoic', label: 'Oxidation', data: { reagents: 'KMnO₄' } });
-
+        edges.push(reactionEdge('ox-sidechain', 'aromatic-toluene', 'aromatic-benzoic', 'Oxidation', 'KMnO₄, reflux', '#ef4444'));
+    if (find('aromatic-benzene') && find('aromatic-phenol'))
+        edges.push(reactionEdge('phenol-form', 'aromatic-benzene', 'aromatic-phenol', 'Dow process', 'NaOH, high T/P', '#ef4444'));
 
     return edges;
 };
