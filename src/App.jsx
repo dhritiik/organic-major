@@ -12,12 +12,57 @@ import { Globe, Focus } from 'lucide-react';
 
 import LandingOverlay from './components/LandingOverlay';
 import MechanismPlayer from './components/MechanismPlayer';
+import ChemSidebar from './components/ChemSidebar';
+import ChemSidebarToggle from './components/ChemSidebarToggle';
 
 const minimalNodes = initialNodes.filter(n => n.data.isElement);
 const minimalEdges = initialEdges.filter(e =>
   initialNodes.find(n => n.id === e.source)?.data.isElement &&
   initialNodes.find(n => n.id === e.target)?.data.isElement
 );
+
+// ─── helpers ─────────────────────────────────────────────────────────────────
+
+/** Map a ReactFlow node → ChemSidebar context object */
+function nodeToContext(node) {
+  if (!node) return null;
+  const { data, id } = node;
+  let type = 'molecule';
+  if (data.isElement) type = 'element';
+  else if (id.startsWith('backbone')) type = 'backbone';
+  else if (data.isReaction) type = 'reaction';
+
+  return {
+    type,
+    label: data.label,
+    description: data.description ?? data.formula ?? null,
+    extra: {
+      formula: data.formula ?? null,
+      category: data.category ?? null,
+      ...(data.extra ?? {}),
+    },
+  };
+}
+
+/** Map a ReactFlow edge + reaction data → ChemSidebar context object */
+function edgeToContext(edge, reactionData, sourceNode, targetNode) {
+  if (!edge) return null;
+  const label = edge.label || edge.data?.label || 'Reaction';
+  return {
+    type: 'reaction',
+    label,
+    description: reactionData?.summary ?? `${sourceNode?.data?.label ?? ''} → ${targetNode?.data?.label ?? ''}`,
+    extra: {
+      reagents: reactionData?.reagents ?? null,
+      conditions: reactionData?.conditions ?? null,
+      mechanism: reactionData?.mechanism ?? null,
+      source: sourceNode?.data?.label ?? null,
+      target: targetNode?.data?.label ?? null,
+    },
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function Content() {
   const [nodes, setNodes, onNodesChange] = useNodesState(minimalNodes);
@@ -26,7 +71,12 @@ function Content() {
   const [selectedEdge, setSelectedEdge] = useState(null);
   const [showLanding, setShowLanding] = useState(true);
   const [activeMechanism, setActiveMechanism] = useState(null);
-  const [viewMode, setViewMode] = useState('focused'); // 'universe' or 'focused'
+  const [viewMode, setViewMode] = useState('focused');
+
+  // ── ChemSidebar state ──
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [chemContext, setChemContext] = useState(null);
+
   const { fitView } = useReactFlow();
 
   const getFocusedGraph = useCallback((targetNode, allNodes, allEdges) => {
@@ -116,7 +166,11 @@ function Content() {
 
   const handleNodeClick = (event, node) => {
     setSelectedNode(node);
-    setSelectedEdge(null); // close edge panel when selecting a node
+    setSelectedEdge(null);
+
+    // Update ChemBot context automatically when a node is clicked
+    setChemContext(nodeToContext(node));
+
     const isFoundation = node.data.isElement || node.id.startsWith('backbone');
     if (!isFoundation) {
       applyViewMode(node, viewMode);
@@ -131,13 +185,11 @@ function Content() {
     const sourceNode = initialNodes.find(n => n.id === edge.source);
     const targetNode = initialNodes.find(n => n.id === edge.target);
 
-    setSelectedEdge({
-      edge,
-      reactionData,
-      sourceNode,
-      targetNode,
-    });
-    setSelectedNode(null); // close node panel when selecting an edge
+    setSelectedEdge({ edge, reactionData, sourceNode, targetNode });
+    setSelectedNode(null);
+
+    // Update ChemBot context automatically when an edge/reaction is clicked
+    setChemContext(edgeToContext(edge, reactionData, sourceNode, targetNode));
   }, []);
 
   const applyViewMode = (target, mode) => {
@@ -199,6 +251,7 @@ function Content() {
     if (targetNode) {
       setSelectedNode(targetNode);
       setSelectedEdge(null);
+      setChemContext(nodeToContext(targetNode)); // also update ChemBot on search
       applyViewMode(targetNode, viewMode);
     }
   };
@@ -241,10 +294,7 @@ function Content() {
           transition={{ delay: 0.5 }}
           className="absolute top-0 left-0 w-full z-40"
         >
-          <SearchBar
-            onSearch={handleSearch}
-            allNodes={initialNodes}
-          />
+          <SearchBar onSearch={handleSearch} allNodes={initialNodes} />
         </motion.div>
       )}
 
@@ -319,6 +369,8 @@ function Content() {
               const targetNode = initialNodes.find(n => n.id === edge.target);
               setSelectedEdge({ edge, reactionData, sourceNode, targetNode });
               setSelectedNode(null);
+              // Keep ChemBot context in sync when navigating from DetailsPanel
+              setChemContext(edgeToContext(edge, reactionData, sourceNode, targetNode));
             }}
           />
         )}
@@ -336,6 +388,22 @@ function Content() {
           />
         )}
       </AnimatePresence>
+
+      {/* ── ChemBot AI Sidebar ── */}
+      {!showLanding && (
+        <>
+          <ChemSidebar
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+            context={chemContext}
+          />
+          <ChemSidebarToggle
+            isOpen={sidebarOpen}
+            onClick={() => setSidebarOpen(v => !v)}
+            hasContext={!!chemContext}
+          />
+        </>
+      )}
     </div>
   );
 }
