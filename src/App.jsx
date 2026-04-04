@@ -12,6 +12,8 @@ import { Globe, Focus } from 'lucide-react';
 
 import LandingOverlay from './components/LandingOverlay';
 import MechanismPlayer from './components/MechanismPlayer';
+import NNSidebar from './components/NNSidebar';
+import NeuralNetworkView from './components/NeuralNetworkView';
 
 const minimalNodes = initialNodes.filter(n => n.data.isElement);
 const minimalEdges = initialEdges.filter(e =>
@@ -27,6 +29,7 @@ function Content() {
   const [showLanding, setShowLanding] = useState(true);
   const [activeMechanism, setActiveMechanism] = useState(null);
   const [viewMode, setViewMode] = useState('focused'); // 'universe' or 'focused'
+  const [nnMode, setNnMode] = useState(false);
   const { fitView } = useReactFlow();
 
   const getFocusedGraph = useCallback((targetNode, allNodes, allEdges) => {
@@ -278,26 +281,30 @@ function Content() {
           >
             <Focus size={20} className={viewMode === 'focused' ? 'text-white' : 'text-gray-400 group-hover:text-white'} />
           </button>
+          <div className="w-full h-px bg-white/10 my-1" />
+          <NNSidebar nnMode={nnMode} onToggle={() => setNnMode(m => !m)} />
         </motion.div>
       )}
 
       {/* Main Graph Area */}
-      <div className="absolute inset-0 z-0">
-        <AnimatedBackground />
-        <GraphCanvas
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onNodeClick={handleNodeClick}
-          onEdgeClick={handleEdgeClick}
-        />
-      </div>
+      {!nnMode && (
+        <div className="absolute inset-0 z-0">
+          <AnimatedBackground />
+          <GraphCanvas
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onNodeClick={handleNodeClick}
+            onEdgeClick={handleEdgeClick}
+          />
+        </div>
+      )}
 
       {/* Details Panel Sidebar (Node) */}
       <AnimatePresence>
-        {selectedNode && (
+        {!nnMode && selectedNode && (
           <DetailsPanel
             selectedNode={selectedNode}
             allEdges={initialEdges}
@@ -326,7 +333,7 @@ function Content() {
 
       {/* Reaction Panel Sidebar (Edge) */}
       <AnimatePresence>
-        {selectedEdge && (
+        {!nnMode && selectedEdge && (
           <ReactionPanel
             reactionData={selectedEdge.reactionData}
             sourceNode={selectedEdge.sourceNode}
@@ -334,6 +341,13 @@ function Content() {
             onClose={() => setSelectedEdge(null)}
             onPlayMechanism={setActiveMechanism}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Neural Network Full-Screen View */}
+      <AnimatePresence>
+        {nnMode && (
+          <NeuralNetworkView allNodes={initialNodes} allEdges={initialEdges} onClose={() => setNnMode(false)} />
         )}
       </AnimatePresence>
     </div>

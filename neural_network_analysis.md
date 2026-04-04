@@ -332,4 +332,11 @@ reactionInfo.js ──→ Reagent          │ Hidden₂ (32) │ ← ReLU
 3. **Train live or pre-trained?** — Train once, save weights as JSON, or re-train on every page load?
 4. **Visualize the NN?** — Do you want to show the neuron activations in the UI (like a "brain" view)?
 
+
+Which task? — only Reaction prediction (recommended)
+Pure JS or TensorFlow.js? — use TF.js is more robust
+Train live or pre-trained? — Train once, save weights as JSON . 
+Visualize the NN? — Do you want to show the neuron activations in the UI (like a "brain" view)?- yes make the ui for this proper. 
+
+
 Let me know your choices and I'll build the implementation!
