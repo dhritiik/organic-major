@@ -7,14 +7,16 @@ import ReactionPanel from './components/ReactionPanel';
 import AnimatedBackground from './components/AnimatedBackground';
 import { AnimatePresence, motion } from 'framer-motion';
 import { initialNodes, initialEdges } from './data/knowledgeGraph';
+import { physicalNodes, physicalEdges, physicalConceptNodes, physicalConceptEdges } from './data/physicalKnowledgeGraph';
 import { getReactionInfo } from './data/reactionInfo';
-import { Globe, Focus } from 'lucide-react';
+import { Globe, Focus, FlaskConical, Atom } from 'lucide-react';
 
 import LandingOverlay from './components/LandingOverlay';
 import MechanismPlayer from './components/MechanismPlayer';
 import NNSidebar from './components/NNSidebar';
 import NeuralNetworkView from './components/NeuralNetworkView';
 
+// ── Organic universe: element-only starting view ──
 const minimalNodes = initialNodes.filter(n => n.data.isElement);
 const minimalEdges = initialEdges.filter(e =>
   initialNodes.find(n => n.id === e.source)?.data.isElement &&
@@ -30,7 +32,14 @@ function Content() {
   const [activeMechanism, setActiveMechanism] = useState(null);
   const [viewMode, setViewMode] = useState('focused'); // 'universe' or 'focused'
   const [nnMode, setNnMode] = useState(false);
+  // ── Domain: 'organic' | 'physical' ──────────────────────────────────────────
+  const [graphDomain, setGraphDomain] = useState('organic');
   const { fitView } = useReactFlow();
+
+  // Convenience: the full node/edge sets for the active domain
+  const allNodes = graphDomain === 'organic' ? initialNodes : physicalNodes;
+  const allEdges = graphDomain === 'organic' ? initialEdges : physicalEdges;
+
 
   const getFocusedGraph = useCallback((targetNode, allNodes, allEdges) => {
     if (!targetNode) return { nodes: minimalNodes, edges: minimalEdges };
@@ -117,9 +126,29 @@ function Content() {
     [setEdges],
   );
 
+  // ── Switch between Organic and Physical universes ───────────────────────────
+  const switchDomain = (domain) => {
+    if (domain === graphDomain) return;
+    setGraphDomain(domain);
+    setSelectedNode(null);
+    setSelectedEdge(null);
+    setNnMode(false);
+    if (domain === 'organic') {
+      setNodes(minimalNodes);
+      setEdges(minimalEdges);
+      setViewMode('focused');
+    } else {
+      // Physical universe: start with concept nodes in universe view
+      setNodes(physicalConceptNodes);
+      setEdges(physicalConceptEdges);
+      setViewMode('universe');
+    }
+    setTimeout(() => fitView({ duration: 900, padding: 0.25 }), 80);
+  };
+
   const handleNodeClick = (event, node) => {
     setSelectedNode(node);
-    setSelectedEdge(null); // close edge panel when selecting a node
+    setSelectedEdge(null);
     const isFoundation = node.data.isElement || node.id.startsWith('backbone');
     if (!isFoundation) {
       applyViewMode(node, viewMode);
@@ -131,8 +160,8 @@ function Content() {
     if (!reactionLabel) return;
 
     const reactionData = getReactionInfo(reactionLabel);
-    const sourceNode = initialNodes.find(n => n.id === edge.source);
-    const targetNode = initialNodes.find(n => n.id === edge.target);
+    const sourceNode = allNodes.find(n => n.id === edge.source);
+    const targetNode = allNodes.find(n => n.id === edge.target);
 
     setSelectedEdge({
       edge,
@@ -140,21 +169,21 @@ function Content() {
       sourceNode,
       targetNode,
     });
-    setSelectedNode(null); // close node panel when selecting an edge
-  }, []);
+    setSelectedNode(null);
+  }, [allNodes]);
 
   const applyViewMode = (target, mode) => {
     if (mode === 'focused') {
-      const { nodes: fNodes, edges: fEdges } = getFocusedGraph(target, initialNodes, initialEdges);
+      const { nodes: fNodes, edges: fEdges } = getFocusedGraph(target, allNodes, allEdges);
       setNodes(fNodes);
       setEdges(fEdges);
       setTimeout(() => fitView({ duration: 1000, padding: 0.5 }), 50);
     } else {
-      const connectedNodeIds = initialEdges
+      const connectedNodeIds = allEdges
         .filter(e => e.source === target.id || e.target === target.id)
         .flatMap(e => [e.source, e.target]);
 
-      setNodes(initialNodes.map(n => {
+      setNodes(allNodes.map(n => {
         const isTarget = n.id === target.id;
         const isConnected = connectedNodeIds.includes(n.id);
         return {
@@ -163,7 +192,7 @@ function Content() {
         };
       }));
 
-      setEdges(initialEdges.map(e => {
+      setEdges(allEdges.map(e => {
         const isConnected = e.source === target.id || e.target === target.id;
         return {
           ...e,
@@ -180,11 +209,11 @@ function Content() {
       setSelectedNode(null);
       setSelectedEdge(null);
       if (viewMode === 'universe') {
-        setNodes(initialNodes);
-        setEdges(initialEdges);
+        setNodes(allNodes);
+        setEdges(allEdges);
       } else {
-        setNodes(minimalNodes);
-        setEdges(minimalEdges);
+        setNodes(graphDomain === 'organic' ? minimalNodes : physicalConceptNodes);
+        setEdges(graphDomain === 'organic' ? minimalEdges : physicalConceptEdges);
       }
       fitView({ duration: 800 });
       return;
@@ -192,11 +221,11 @@ function Content() {
 
     const cleanQuery = query.toLowerCase().trim().replace(/['"!?.,;:]/g, '');
 
-    const targetNode = initialNodes.find(n =>
+    const targetNode = allNodes.find(n =>
       n.data.label.toLowerCase().trim().replace(/['"!?.,;:]/g, '') === cleanQuery
-    ) || initialNodes.find(n =>
+    ) || allNodes.find(n =>
       n.data.label.toLowerCase().includes(cleanQuery) ||
-      n.data.formula.toLowerCase().replace(/[^a-z0-9]/g, '').includes(cleanQuery)
+      (n.data.formula || '').toLowerCase().replace(/[^a-z0-9]/g, '').includes(cleanQuery)
     );
 
     if (targetNode) {
@@ -210,8 +239,8 @@ function Content() {
     setViewMode('universe');
     setSelectedNode(null);
     setSelectedEdge(null);
-    setNodes(initialNodes);
-    setEdges(initialEdges);
+    setNodes(allNodes);
+    setEdges(allEdges);
     setTimeout(() => fitView({ duration: 800, padding: 0.2 }), 50);
   };
 
@@ -219,8 +248,8 @@ function Content() {
     setViewMode('focused');
     setSelectedNode(null);
     setSelectedEdge(null);
-    setNodes(minimalNodes);
-    setEdges(minimalEdges);
+    setNodes(graphDomain === 'organic' ? minimalNodes : physicalConceptNodes);
+    setEdges(graphDomain === 'organic' ? minimalEdges : physicalConceptEdges);
     setTimeout(() => fitView({ duration: 800 }), 50);
   };
 
@@ -236,6 +265,41 @@ function Content() {
         )}
       </AnimatePresence>
 
+      {/* ── Domain Switcher pill tab (top-centre) ──────────────────────────── */}
+      {!showLanding && (
+        <motion.div
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 bg-gray-900/80 backdrop-blur-xl border border-white/10 rounded-full p-1 shadow-xl"
+        >
+          <button
+            onClick={() => switchDomain('organic')}
+            title="Organic Chemistry Universe"
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${
+              graphDomain === 'organic'
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <FlaskConical size={14} />
+            Organic Chemistry
+          </button>
+          <button
+            onClick={() => switchDomain('physical')}
+            title="Physical Chemistry Universe"
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${
+              graphDomain === 'physical'
+                ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Atom size={14} />
+            Physical Chemistry
+          </button>
+        </motion.div>
+      )}
+
       {/* Header / Search */}
       {!showLanding && (
         <motion.div
@@ -246,7 +310,7 @@ function Content() {
         >
           <SearchBar
             onSearch={handleSearch}
-            allNodes={initialNodes}
+            allNodes={allNodes}
           />
         </motion.div>
       )}
@@ -307,23 +371,23 @@ function Content() {
         {!nnMode && selectedNode && (
           <DetailsPanel
             selectedNode={selectedNode}
-            allEdges={initialEdges}
-            allNodes={initialNodes}
+            allEdges={allEdges}
+            allNodes={allNodes}
             onClose={() => {
               setSelectedNode(null);
               if (viewMode === 'universe') {
-                setNodes(initialNodes.map(n => ({ ...n, style: { ...n.style, opacity: 1 } })));
-                setEdges(initialEdges.map(e => ({ ...e, style: { ...e.style, opacity: 1 }, animated: !!e.animated })));
+                setNodes(allNodes.map(n => ({ ...n, style: { ...n.style, opacity: 1 } })));
+                setEdges(allEdges.map(e => ({ ...e, style: { ...e.style, opacity: 1 }, animated: !!e.animated })));
               } else {
-                setNodes(minimalNodes);
-                setEdges(minimalEdges);
+                setNodes(graphDomain === 'organic' ? minimalNodes : physicalConceptNodes);
+                setEdges(graphDomain === 'organic' ? minimalEdges : physicalConceptEdges);
               }
             }}
-            onPlayMechanism={setActiveMechanism}
+            onPlayMechanism={graphDomain === 'organic' ? setActiveMechanism : undefined}
             onEdgeSelect={(edge) => {
               const reactionData = getReactionInfo(edge.label);
-              const sourceNode = initialNodes.find(n => n.id === edge.source);
-              const targetNode = initialNodes.find(n => n.id === edge.target);
+              const sourceNode = allNodes.find(n => n.id === edge.source);
+              const targetNode = allNodes.find(n => n.id === edge.target);
               setSelectedEdge({ edge, reactionData, sourceNode, targetNode });
               setSelectedNode(null);
             }}
@@ -344,9 +408,9 @@ function Content() {
         )}
       </AnimatePresence>
 
-      {/* Neural Network Full-Screen View */}
+      {/* Neural Network Full-Screen View — organic universe only */}
       <AnimatePresence>
-        {nnMode && (
+        {nnMode && graphDomain === 'organic' && (
           <NeuralNetworkView allNodes={initialNodes} allEdges={initialEdges} onClose={() => setNnMode(false)} />
         )}
       </AnimatePresence>

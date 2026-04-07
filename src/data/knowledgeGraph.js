@@ -1,6 +1,8 @@
 import { generateKnowledgeGraph } from './graphGenerator';
 
-const { nodes, edges } = generateKnowledgeGraph(10); // Generate up to Decane (C10)
+// Organic chemistry universe — C1 to C10
+const { nodes, edges } = generateKnowledgeGraph(10);
 
 export const initialNodes = nodes;
 export const initialEdges = edges;
+
