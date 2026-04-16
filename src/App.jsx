@@ -8,12 +8,13 @@ import AnimatedBackground from './components/AnimatedBackground';
 import { AnimatePresence, motion } from 'framer-motion';
 import { initialNodes, initialEdges } from './data/knowledgeGraph';
 import { getReactionInfo } from './data/reactionInfo';
-import { Globe, Focus } from 'lucide-react';
+import { Globe, Focus, Atom, FlaskConical } from 'lucide-react';
 
 import LandingOverlay from './components/LandingOverlay';
 import MechanismPlayer from './components/MechanismPlayer';
 import NNSidebar from './components/NNSidebar';
 import NeuralNetworkView from './components/NeuralNetworkView';
+import ChemChatbot from './components/ChemChatbot';
 
 const minimalNodes = initialNodes.filter(n => n.data.isElement);
 const minimalEdges = initialEdges.filter(e =>
@@ -21,6 +22,130 @@ const minimalEdges = initialEdges.filter(e =>
   initialNodes.find(n => n.id === e.target)?.data.isElement
 );
 
+// ─── Chatbot FAB (Floating Action Button cluster) ────────────────────────────
+const ChatbotFAB = ({ onOpenOrganic, onOpenPhysical }) => {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Sub-buttons */}
+      <AnimatePresence>
+        {hovered && (
+          <>
+            {/* Physical/Reagent button */}
+            <motion.div
+              initial={{ opacity: 0, y: 12, scale: 0.85 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.85 }}
+              transition={{ delay: 0.05 }}
+              className="flex items-center gap-2"
+            >
+              <span
+                className="text-xs px-2.5 py-1 rounded-full text-emerald-300 font-medium whitespace-nowrap"
+                style={{
+                  background: 'rgba(10,20,30,0.9)',
+                  border: '1px solid rgba(16,185,129,0.3)',
+                  backdropFilter: 'blur(12px)',
+                }}
+              >
+                Reagents & Physical
+              </span>
+              <button
+                onClick={onOpenPhysical}
+                className="w-11 h-11 rounded-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-lg"
+                style={{
+                  background: 'linear-gradient(135deg, #065f46, #064e3b)',
+                  border: '1px solid rgba(16,185,129,0.4)',
+                  boxShadow: '0 4px 24px rgba(16,185,129,0.25)',
+                }}
+              >
+                <FlaskConical size={18} className="text-emerald-300" />
+              </button>
+            </motion.div>
+
+            {/* Organic button */}
+            <motion.div
+              initial={{ opacity: 0, y: 12, scale: 0.85 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.85 }}
+              transition={{ delay: 0.1 }}
+              className="flex items-center gap-2"
+            >
+              <span
+                className="text-xs px-2.5 py-1 rounded-full text-blue-300 font-medium whitespace-nowrap"
+                style={{
+                  background: 'rgba(10,20,30,0.9)',
+                  border: '1px solid rgba(59,130,246,0.3)',
+                  backdropFilter: 'blur(12px)',
+                }}
+              >
+                Organic Chemistry
+              </span>
+              <button
+                onClick={onOpenOrganic}
+                className="w-11 h-11 rounded-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-lg"
+                style={{
+                  background: 'linear-gradient(135deg, #1e3a5f, #1e3058)',
+                  border: '1px solid rgba(59,130,246,0.4)',
+                  boxShadow: '0 4px 24px rgba(59,130,246,0.25)',
+                }}
+              >
+                <Atom size={18} className="text-blue-300" />
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Main FAB */}
+      <motion.button
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.94 }}
+        className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl transition-all relative"
+        style={{
+          background: hovered
+            ? 'linear-gradient(135deg, #3b82f6, #10b981)'
+            : 'linear-gradient(135deg, #1d4ed8, #059669)',
+          boxShadow: hovered
+            ? '0 8px 32px rgba(59,130,246,0.4), 0 4px 16px rgba(16,185,129,0.3)'
+            : '0 4px 20px rgba(59,130,246,0.3)',
+          border: '1px solid rgba(255,255,255,0.15)',
+        }}
+      >
+        {/* Dual icon */}
+        <div className="relative w-6 h-6">
+          <Atom size={16} className="text-white absolute top-0 left-0 opacity-70" />
+          <FlaskConical size={14} className="text-white absolute bottom-0 right-0 opacity-90" />
+        </div>
+
+        {/* Pulse ring */}
+        <motion.div
+          className="absolute inset-0 rounded-2xl"
+          animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0, 0.4] }}
+          transition={{ duration: 2.5, repeat: Infinity }}
+          style={{ background: 'rgba(59,130,246,0.4)' }}
+        />
+      </motion.button>
+
+      {/* Label under FAB */}
+      {!hovered && (
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-[10px] text-gray-500 text-center"
+        >
+          ChemAI
+        </motion.p>
+      )}
+    </div>
+  );
+};
+
+// ─── Main App Content ─────────────────────────────────────────────────────────
 function Content() {
   const [nodes, setNodes, onNodesChange] = useNodesState(minimalNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(minimalEdges);
@@ -28,9 +153,19 @@ function Content() {
   const [selectedEdge, setSelectedEdge] = useState(null);
   const [showLanding, setShowLanding] = useState(true);
   const [activeMechanism, setActiveMechanism] = useState(null);
-  const [viewMode, setViewMode] = useState('focused'); // 'universe' or 'focused'
+  const [viewMode, setViewMode] = useState('focused');
   const [nnMode, setNnMode] = useState(false);
+
+  // Chatbot state
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMode, setChatMode] = useState('organic');
+
   const { fitView } = useReactFlow();
+
+  const openChat = useCallback((mode) => {
+    setChatMode(mode);
+    setChatOpen(true);
+  }, []);
 
   const getFocusedGraph = useCallback((targetNode, allNodes, allEdges) => {
     if (!targetNode) return { nodes: minimalNodes, edges: minimalEdges };
@@ -119,7 +254,7 @@ function Content() {
 
   const handleNodeClick = (event, node) => {
     setSelectedNode(node);
-    setSelectedEdge(null); // close edge panel when selecting a node
+    setSelectedEdge(null);
     const isFoundation = node.data.isElement || node.id.startsWith('backbone');
     if (!isFoundation) {
       applyViewMode(node, viewMode);
@@ -134,13 +269,8 @@ function Content() {
     const sourceNode = initialNodes.find(n => n.id === edge.source);
     const targetNode = initialNodes.find(n => n.id === edge.target);
 
-    setSelectedEdge({
-      edge,
-      reactionData,
-      sourceNode,
-      targetNode,
-    });
-    setSelectedNode(null); // close node panel when selecting an edge
+    setSelectedEdge({ edge, reactionData, sourceNode, targetNode });
+    setSelectedNode(null);
   }, []);
 
   const applyViewMode = (target, mode) => {
@@ -244,14 +374,11 @@ function Content() {
           transition={{ delay: 0.5 }}
           className="absolute top-0 left-0 w-full z-40"
         >
-          <SearchBar
-            onSearch={handleSearch}
-            allNodes={initialNodes}
-          />
+          <SearchBar onSearch={handleSearch} allNodes={initialNodes} />
         </motion.div>
       )}
 
-      {/* Side View Toggle Button */}
+      {/* Side View Toggle + NN */}
       {!showLanding && (
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -302,7 +429,7 @@ function Content() {
         </div>
       )}
 
-      {/* Details Panel Sidebar (Node) */}
+      {/* Details Panel (Node) */}
       <AnimatePresence>
         {!nnMode && selectedNode && (
           <DetailsPanel
@@ -331,7 +458,7 @@ function Content() {
         )}
       </AnimatePresence>
 
-      {/* Reaction Panel Sidebar (Edge) */}
+      {/* Reaction Panel (Edge) */}
       <AnimatePresence>
         {!nnMode && selectedEdge && (
           <ReactionPanel
@@ -350,6 +477,27 @@ function Content() {
           <NeuralNetworkView allNodes={initialNodes} allEdges={initialEdges} onClose={() => setNnMode(false)} />
         )}
       </AnimatePresence>
+
+      {/* ── ChemAI Chatbot FAB ── */}
+      {!showLanding && !chatOpen && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ delay: 1.2, type: 'spring', stiffness: 300, damping: 25 }}
+        >
+          <ChatbotFAB
+            onOpenOrganic={() => openChat('organic')}
+            onOpenPhysical={() => openChat('physical')}
+          />
+        </motion.div>
+      )}
+
+      {/* ── ChemAI Chatbot Panel ── */}
+      <ChemChatbot
+        isOpen={chatOpen}
+        onClose={() => setChatOpen(false)}
+        initialMode={chatMode}
+      />
     </div>
   );
 }
