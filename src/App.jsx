@@ -9,7 +9,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { initialNodes, initialEdges } from './data/knowledgeGraph';
 import { physicalNodes, physicalEdges, physicalConceptNodes, physicalConceptEdges } from './data/physicalKnowledgeGraph';
 import { getReactionInfo } from './data/reactionInfo';
-import { Globe, Focus } from 'lucide-react';
+import { Globe, Focus, Atom, FlaskConical } from 'lucide-react';
 
 import LandingOverlay from './components/LandingOverlay';
 import MechanismPlayer from './components/MechanismPlayer';
@@ -157,7 +157,18 @@ function Content() {
   const [activeMechanism, setActiveMechanism] = useState(null);
   const [viewMode, setViewMode] = useState('focused');
   const [nnMode, setNnMode] = useState(false);
+  const [graphDomain, setGraphDomain] = useState('organic');
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMode, setChatMode] = useState('organic');
   const { fitView } = useReactFlow();
+
+  const allNodes = graphDomain === 'organic' ? initialNodes : physicalNodes;
+  const allEdges = graphDomain === 'organic' ? initialEdges : physicalEdges;
+
+  const openChat = (mode) => {
+    setChatMode(mode);
+    setChatOpen(true);
+  };
 
   const getFocusedGraph = useCallback((targetNode, allNodes, allEdges) => {
     if (!targetNode) return { nodes: minimalNodes, edges: minimalEdges };
